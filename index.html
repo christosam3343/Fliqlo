@@ -8,8 +8,8 @@
   <title>Flip Clock</title>
   <link rel="icon" href="./favicon.ico" sizes="16x16 20x20 24x24 32x32 40x40 48x48 64x64 128x128 256x256">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./clock.css">
-  <script src="./clock.js" defer></script>
+  <link rel="stylesheet" href="./clock.css?v=2">
+  <script src="./clock.js?v=2" defer></script>
 </head>
 <body>
   <main class="stage" aria-label="Flip Clock">
@@ -48,6 +48,21 @@
       Show seconds
       <input type="checkbox" id="show-seconds">
     </label>
+    <div class="settings-row">
+      <label for="numeral-font">Numeral font</label>
+      <select id="numeral-font">
+        <option value="classic">Classic</option>
+        <option value="sans">Sans serif</option>
+        <option value="mono">Monospace</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <label for="numeral-color">Numeral color</label>
+      <div class="color-control">
+        <input type="color" id="numeral-color" value="#eeeeee">
+        <button type="button" id="reset-numeral-color" aria-label="Reset numeral color">Reset</button>
+      </div>
+    </div>
     <div class="settings-row">
       <label for="clock-size">Clock size</label>
       <div class="range-control">

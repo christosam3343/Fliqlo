@@ -8,6 +8,9 @@ const fullscreen = document.querySelector('#fullscreen');
 const notice = document.querySelector('#notice');
 const formatButtons = document.querySelectorAll('[data-format]');
 const showSeconds = document.querySelector('#show-seconds');
+const numeralFont = document.querySelector('#numeral-font');
+const numeralColor = document.querySelector('#numeral-color');
+const resetNumeralColor = document.querySelector('#reset-numeral-color');
 const size = document.querySelector('#clock-size');
 const brightness = document.querySelector('#brightness');
 const keepAwake = document.querySelector('#keep-awake');
@@ -31,6 +34,8 @@ try {
 const preferences = {
   format: stored?.format === 24 ? 24 : 12,
   seconds: stored?.seconds === true,
+  font: Array.from(numeralFont.options).some((option) => option.value === stored?.font) ? stored.font : numeralFont.value,
+  color: /^#[0-9a-f]{6}$/i.test(stored?.color) ? stored.color : numeralColor.defaultValue,
   size: percent(stored?.size, 50),
   brightness: percent(stored?.brightness, 20),
   awake: stored?.awake === true,
@@ -120,13 +125,17 @@ function applyPreferences() {
     button.setAttribute('aria-pressed', Number(button.dataset.format) === preferences.format);
   }
   showSeconds.checked = preferences.seconds;
+  numeralFont.value = preferences.font;
+  numeralColor.value = preferences.color;
   size.value = preferences.size;
   brightness.value = preferences.brightness;
   keepAwake.checked = preferences.awake;
   document.querySelector('#clock-size-value').value = `${preferences.size}%`;
   document.querySelector('#brightness-value').value = `${preferences.brightness}%`;
   clock.classList.toggle('with-seconds', preferences.seconds);
+  clock.dataset.font = preferences.font;
   tiles[2].element.hidden = !preferences.seconds;
+  clock.style.setProperty('--numeral-color', preferences.color);
   clock.style.setProperty('--scale', preferences.size / 100);
   clock.style.setProperty('--brightness', preferences.brightness / 100);
   tick(false);
@@ -215,6 +224,9 @@ for (const button of formatButtons) {
   button.addEventListener('click', () => changePreference('format', Number(button.dataset.format)));
 }
 showSeconds.addEventListener('change', () => changePreference('seconds', showSeconds.checked));
+numeralFont.addEventListener('change', () => changePreference('font', numeralFont.value));
+numeralColor.addEventListener('input', () => changePreference('color', numeralColor.value));
+resetNumeralColor.addEventListener('click', () => changePreference('color', numeralColor.defaultValue));
 size.addEventListener('input', () => changePreference('size', size.valueAsNumber));
 brightness.addEventListener('input', () => changePreference('brightness', brightness.valueAsNumber));
 keepAwake.addEventListener('change', () => {

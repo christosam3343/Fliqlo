@@ -19,7 +19,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { color: inherit; cursor: pointer; }
 :focus-visible { outline: 2px solid #eee; outline-offset: 3px; }
 
@@ -42,15 +42,32 @@ button { color: inherit; cursor: pointer; }
   --columns: 2;
   --scale: 1;
   --brightness: 1;
+  --numeral-color: #eee;
+  --numeral-font: "Barlow Condensed", Impact, sans-serif;
+  --numeral-size: 1.04;
+  --numeral-stretch: .83;
   --tile: calc(min(86vw / var(--columns), 66svh) * var(--scale));
   display: flex;
   align-items: center;
   gap: calc(var(--tile) * .047);
+  color: var(--numeral-color);
   opacity: var(--brightness);
   user-select: none;
 }
 
 .clock.with-seconds { --columns: 3; }
+
+.clock[data-font="sans"] {
+  --numeral-font: Arial, sans-serif;
+  --numeral-size: .98;
+  --numeral-stretch: .73;
+}
+
+.clock[data-font="mono"] {
+  --numeral-font: Consolas, "Liberation Mono", monospace;
+  --numeral-size: 1.02;
+  --numeral-stretch: .74;
+}
 
 .tile {
   position: relative;
@@ -82,7 +99,7 @@ button { color: inherit; cursor: pointer; }
   border-radius: 0 0 var(--radius) var(--radius);
   background: linear-gradient(#161616, #111);
   transform-origin: center top;
-  color: #e7e7e7;
+  color: color-mix(in srgb, var(--numeral-color), black 3%);
 }
 
 .flap.moving { z-index: 1; }
@@ -95,10 +112,10 @@ button { color: inherit; cursor: pointer; }
   display: grid;
   place-content: center;
   color: inherit;
-  font: 800 calc(var(--tile) * 1.04)/1 "Barlow Condensed", Impact, sans-serif;
+  font: 800 calc(var(--tile) * var(--numeral-size))/1 var(--numeral-font);
   font-variant-numeric: tabular-nums;
   letter-spacing: -.012em;
-  transform: scaleX(.83);
+  transform: scaleX(var(--numeral-stretch));
 }
 
 .top .glyph { top: -.045em; }
@@ -117,9 +134,9 @@ button { color: inherit; cursor: pointer; }
 .meridiem {
   position: absolute;
   z-index: 4;
-  top: 16.5%;
-  left: 7%;
-  font: 800 calc(var(--tile) * .106)/1 "Barlow Condensed", Impact, sans-serif;
+  top: 5%;
+  left: 8%;
+  font: 800 calc(var(--tile) * .09)/1 "Barlow Condensed", Impact, sans-serif;
 }
 
 @media (max-aspect-ratio: 4/5) {
@@ -207,6 +224,18 @@ dialog::backdrop { background: #0004; }
 .settings-row { min-height: 49px; border-bottom: 1px solid #2b2b2b; font-size: .875rem; }
 .settings-row input { accent-color: #ddd; cursor: pointer; }
 .settings-row input[type="checkbox"] { width: 16px; height: 16px; margin: 0 7px; }
+.settings-row select, .color-control button, .color-control input {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #202020;
+  color: inherit;
+}
+.settings-row select, .color-control button { padding: 3px 8px; }
+.settings-row select { cursor: pointer; }
+.color-control { display: flex; align-items: center; gap: 6px; }
+.color-control input { width: 44px; padding: 3px; }
+.color-control button:hover { background: #303030; }
 
 .segments { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 7px; }
 .segments button { min-width: 42px; padding: 4px 6px; border: 0; border-radius: 4px; background: transparent; color: var(--muted); }
