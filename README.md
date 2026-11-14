@@ -10,6 +10,10 @@ A browser-based split-flap clock inspired by [Fliqlo](https://fliqlo.com/). It r
 
 Settings include 12- and 24-hour time, seconds, numeral font and color, size, brightness, and an optional screen wake lock. The browser remembers your settings. Wake lock depends on browser and system support and applies while the page is visible.
 
+Use the **Focus timer** button to start a countdown from 1 to 99 minutes. Reopen it to pause, resume, or end the session. The clock returns automatically when time is up. You can enable a completion chime when starting a session.
+
+Open the clock online once and let it finish loading. You can then launch the installed app or reopen the site offline in the same browser profile. Offline launch uses a service worker on HTTPS or localhost.
+
 The site runs from the root of `main` on GitHub Pages, with no build step. Open `index.html` directly for local use or serve the folder over `localhost` for development.
 
 The numerals use [Barlow Condensed](https://github.com/jpt/barlow), distributed under the [SIL Open Font License](assets/OFL.txt).

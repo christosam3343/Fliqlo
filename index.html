@@ -8,12 +8,13 @@
   <title>Flip Clock</title>
   <link rel="icon" href="./favicon.ico" sizes="16x16 20x20 24x24 32x32 40x40 48x48 64x64 128x128 256x256">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./clock.css?v=2">
-  <script src="./clock.js?v=2" defer></script>
+  <link rel="stylesheet" href="./clock.css?v=3">
+  <script src="./clock.js?v=3" defer></script>
 </head>
 <body>
   <main class="stage" aria-label="Flip Clock">
     <time id="local-time" class="sr-only"></time>
+    <span id="focus-time" class="sr-only" role="timer" hidden></span>
     <div class="clock" aria-hidden="true">
       <div class="tile" id="hours"><span class="meridiem"></span></div>
       <div class="tile" id="minutes"></div>
@@ -23,6 +24,9 @@
   </main>
 
   <div class="toolbar" role="group" aria-label="Clock controls">
+    <button class="icon-button" id="open-focus" type="button" aria-label="Focus timer" title="Focus timer" aria-haspopup="dialog">
+      <span class="timer-icon" aria-hidden="true"></span>
+    </button>
     <button class="icon-button" id="open-settings" type="button" aria-label="Settings" title="Settings" aria-haspopup="dialog">
       <span class="sliders-icon" aria-hidden="true"><i></i><i></i></span>
     </button>
@@ -31,6 +35,30 @@
     </button>
   </div>
   <p class="toast" id="notice" role="status" hidden></p>
+
+  <dialog id="focus-dialog" aria-labelledby="focus-title">
+    <header class="settings-header">
+      <h1 id="focus-title">Focus timer</h1>
+      <form method="dialog"><button class="icon-button close-button" aria-label="Close focus timer" title="Close focus timer">×</button></form>
+    </header>
+    <form id="focus-setup">
+      <label class="settings-row">
+        Duration (minutes)
+        <input type="number" id="focus-duration" min="1" max="99" step="1" value="25" required>
+      </label>
+      <label class="settings-row">
+        Play a chime when finished
+        <input type="checkbox" id="focus-chime">
+      </label>
+      <div class="focus-actions">
+        <button type="submit" class="primary">Start focus</button>
+      </div>
+    </form>
+    <div class="focus-actions" id="focus-controls" hidden>
+      <button type="button" id="end-focus">End</button>
+      <button type="button" id="toggle-focus" class="primary">Pause</button>
+    </div>
+  </dialog>
 
   <dialog id="settings" aria-labelledby="settings-title">
     <header class="settings-header">

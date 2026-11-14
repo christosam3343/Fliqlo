@@ -2,6 +2,13 @@ const clock = document.querySelector('.clock');
 const clockTime = document.querySelector('#local-time');
 const meridiem = document.querySelector('.meridiem');
 const flapTemplate = document.querySelector('#flaps');
+const focusTime = document.querySelector('#focus-time');
+const focusDialog = document.querySelector('#focus-dialog');
+const focusSetup = document.querySelector('#focus-setup');
+const focusDuration = document.querySelector('#focus-duration');
+const focusChime = document.querySelector('#focus-chime');
+const focusControls = document.querySelector('#focus-controls');
+const toggleFocus = document.querySelector('#toggle-focus');
 const settings = document.querySelector('#settings');
 const openSettings = document.querySelector('#open-settings');
 const fullscreen = document.querySelector('#fullscreen');
@@ -47,6 +54,7 @@ let noticeTimer;
 let wakeLock;
 let requestingWakeLock = false;
 let lastTick;
+let focusSession;
 
 function percent(value, minimum) {
   return Number.isFinite(value) ? Math.round(Math.min(100, Math.max(minimum, value)) / 5) * 5 : 100;
@@ -95,29 +103,96 @@ function updateTile(tile, value, animate) {
   };
 }
 
+function showTiles(hours, minutes, seconds, period, animate) {
+  const showThirdTile = seconds !== null;
+  clock.classList.toggle('with-seconds', showThirdTile);
+  tiles[2].element.hidden = !showThirdTile;
+  updateTile(tiles[0], hours, animate);
+  updateTile(tiles[1], minutes, animate);
+  if (showThirdTile) updateTile(tiles[2], seconds, animate);
+  meridiem.textContent = period;
+}
+
 function tick(animate = true) {
   window.clearTimeout(tickTimer);
   const now = new Date();
+  const canFlip = animate && !document.hidden && now - lastTick < (focusSession || preferences.seconds ? 2500 : 90000);
+  lastTick = now;
+
+  if (focusSession) {
+    const remaining = focusSession.endsAt === null ? focusSession.remaining : focusSession.endsAt - now.getTime();
+    if (remaining <= 0) {
+      endFocus(true);
+      return;
+    }
+
+    const totalSeconds = Math.ceil(remaining / 1000);
+    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+    const paused = focusSession.endsAt === null;
+    showTiles(minutes, seconds, null, paused ? 'PAUSED' : 'FOCUS', canFlip);
+    focusTime.textContent = `${paused ? 'Paused, ' : ''}${Number(minutes)} minutes and ${Number(seconds)} seconds remaining`;
+
+    if (!paused) tickTimer = window.setTimeout(tick, remaining - (totalSeconds - 1) * 1000);
+    return;
+  }
+
   const hours = now.getHours();
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
   const twelveHour = preferences.format === 12;
   const displayHour = twelveHour ? String(hours % 12 || 12) : String(hours).padStart(2, '0');
   const period = twelveHour ? (hours < 12 ? 'AM' : 'PM') : '';
-  const canFlip = animate && !document.hidden && now - lastTick < (preferences.seconds ? 2500 : 90000);
-
-  updateTile(tiles[0], displayHour, canFlip);
-  updateTile(tiles[1], minutes, canFlip);
-  if (preferences.seconds) updateTile(tiles[2], seconds, canFlip);
-  meridiem.textContent = period;
+  showTiles(displayHour, minutes, preferences.seconds ? seconds : null, period, canFlip);
 
   const shownSeconds = preferences.seconds ? `:${seconds}` : '';
   clockTime.dateTime = `${String(hours).padStart(2, '0')}:${minutes}${shownSeconds}`;
   clockTime.textContent = `${displayHour}:${minutes}${shownSeconds}${period ? ` ${period}` : ''}`;
-  lastTick = now;
-
   const interval = preferences.seconds ? 1000 : 60000;
   tickTimer = window.setTimeout(tick, interval - (Date.now() % interval) + 12);
+}
+
+function renderFocusControls() {
+  const active = Boolean(focusSession);
+  focusSetup.hidden = active;
+  focusControls.hidden = !active;
+  toggleFocus.textContent = focusSession?.endsAt === null ? 'Resume' : 'Pause';
+  clockTime.hidden = active;
+  focusTime.hidden = !active;
+  clock.classList.toggle('focus-mode', active);
+  tick(false);
+}
+
+function playFocusChime(audio) {
+  const start = audio.currentTime;
+  for (const [frequency, delay] of [[660, 0], [880, .16]]) {
+    const tone = audio.createOscillator();
+    const volume = audio.createGain();
+    const noteTime = start + delay;
+    tone.frequency.value = frequency;
+    volume.gain.setValueAtTime(.001, noteTime);
+    volume.gain.exponentialRampToValueAtTime(.15, noteTime + .018);
+    volume.gain.exponentialRampToValueAtTime(.001, noteTime + .3);
+    tone.connect(volume).connect(audio.destination);
+    tone.start(noteTime);
+    tone.stop(noteTime + .3);
+    if (delay > 0) tone.onended = () => { void audio.close().catch(() => {}); };
+  }
+}
+
+function endFocus(completed = false) {
+  const { audio } = focusSession;
+  focusSession = undefined;
+  if (focusDialog.open) focusDialog.close();
+  renderFocusControls();
+
+  if (completed) showNotice('Focus session complete');
+  if (!audio) return;
+  if (completed && audio.state === 'running') {
+    playFocusChime(audio);
+  } else {
+    void audio.close().catch(() => {});
+  }
 }
 
 function applyPreferences() {
@@ -132,9 +207,7 @@ function applyPreferences() {
   keepAwake.checked = preferences.awake;
   document.querySelector('#clock-size-value').value = `${preferences.size}%`;
   document.querySelector('#brightness-value').value = `${preferences.brightness}%`;
-  clock.classList.toggle('with-seconds', preferences.seconds);
   clock.dataset.font = preferences.font;
-  tiles[2].element.hidden = !preferences.seconds;
   clock.style.setProperty('--numeral-color', preferences.color);
   clock.style.setProperty('--scale', preferences.size / 100);
   clock.style.setProperty('--brightness', preferences.brightness / 100);
@@ -197,7 +270,7 @@ async function syncWakeLock() {
 function revealControls() {
   document.body.classList.remove('idle');
   window.clearTimeout(idleTimer);
-  if (settings.open) return;
+  if (settings.open || focusDialog.open) return;
   idleTimer = window.setTimeout(() => document.body.classList.add('idle'), 3000);
 }
 
@@ -245,6 +318,41 @@ settings.addEventListener('click', (event) => {
   if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) settings.close();
 });
 
+document.querySelector('#open-focus').addEventListener('click', () => {
+  focusDialog.showModal();
+  revealControls();
+});
+focusDialog.addEventListener('close', revealControls);
+focusSetup.addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (focusSession || !focusDuration.checkValidity()) return;
+
+  const duration = focusDuration.valueAsNumber * 60000;
+  focusSession = { endsAt: Date.now() + duration, remaining: duration };
+  if (focusChime.checked && window.AudioContext) {
+    try {
+      const audio = new AudioContext();
+      focusSession.audio = audio;
+      void audio.resume().catch(() => {});
+    } catch {
+      // The visual completion notice still works if audio is unavailable.
+    }
+  }
+  focusDialog.close();
+  renderFocusControls();
+});
+toggleFocus.addEventListener('click', () => {
+  const now = Date.now();
+  if (focusSession.endsAt === null) {
+    focusSession.endsAt = now + focusSession.remaining;
+  } else {
+    focusSession.remaining = focusSession.endsAt - now;
+    focusSession.endsAt = null;
+  }
+  renderFocusControls();
+});
+document.querySelector('#end-focus').addEventListener('click', () => endFocus());
+
 fullscreen.addEventListener('click', toggleFullscreen);
 document.addEventListener('fullscreenchange', () => {
   const label = document.fullscreenElement ? 'Exit fullscreen' : 'Enter fullscreen';
@@ -254,7 +362,7 @@ document.addEventListener('fullscreenchange', () => {
 });
 document.addEventListener('keydown', (event) => {
   revealControls();
-  if (event.key.toLowerCase() === 'f' && !event.repeat && !event.ctrlKey && !event.metaKey && !event.altKey && !settings.open) {
+  if (event.key.toLowerCase() === 'f' && !event.repeat && !event.ctrlKey && !event.metaKey && !event.altKey && !settings.open && !focusDialog.open) {
     event.preventDefault();
     void toggleFullscreen();
   }
@@ -276,3 +384,9 @@ window.addEventListener('focus', () => {
 
 applyPreferences();
 revealControls();
+
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+    console.warn('Offline launch is unavailable.', error);
+  });
+}

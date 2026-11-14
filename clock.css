@@ -139,6 +139,11 @@ button { color: inherit; cursor: pointer; }
   font: 800 calc(var(--tile) * .09)/1 "Barlow Condensed", Impact, sans-serif;
 }
 
+.focus-mode .meridiem {
+  font-size: max(9px, calc(var(--tile) * .05));
+  letter-spacing: .08em;
+}
+
 @media (max-aspect-ratio: 4/5) {
   .clock {
     --tile: calc(min(78vw, 82svh / (1.13 * var(--columns))) * var(--scale));
@@ -171,6 +176,25 @@ body.idle .toolbar:not(:has(button:focus-visible)) { opacity: 0; pointer-events:
 }
 
 .icon-button:hover { color: #fff; background: #202020; border-color: #343434; }
+
+.timer-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.timer-icon::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 4px;
+  height: 5px;
+  border: solid currentColor;
+  border-width: 0 0 1.5px 1.5px;
+}
 
 .fullscreen-icon {
   width: 16px;
@@ -224,7 +248,8 @@ dialog::backdrop { background: #0004; }
 .settings-row { min-height: 49px; border-bottom: 1px solid #2b2b2b; font-size: .875rem; }
 .settings-row input { accent-color: #ddd; cursor: pointer; }
 .settings-row input[type="checkbox"] { width: 16px; height: 16px; margin: 0 7px; }
-.settings-row select, .color-control button, .color-control input {
+.settings-row select, .color-control button, .color-control input,
+.settings-row input[type="number"], .focus-actions button {
   min-height: 32px;
   border: 1px solid var(--line);
   border-radius: 7px;
@@ -236,6 +261,12 @@ dialog::backdrop { background: #0004; }
 .color-control { display: flex; align-items: center; gap: 6px; }
 .color-control input { width: 44px; padding: 3px; }
 .color-control button:hover { background: #303030; }
+.settings-row input[type="number"] { width: 72px; padding: 3px 8px; cursor: text; }
+.focus-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.focus-actions button { padding: 5px 12px; font-size: .875rem; }
+.focus-actions button:hover { background: #303030; }
+.focus-actions .primary { background: #eee; color: #111; border-color: transparent; font-weight: 600; }
+.focus-actions .primary:hover { background: #d6d6d6; }
 
 .segments { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 7px; }
 .segments button { min-width: 42px; padding: 4px 6px; border: 0; border-radius: 4px; background: transparent; color: var(--muted); }
