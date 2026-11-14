@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="A fullscreen split-flap clock for your browser.">
+  <title>Flip Clock</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./clock.css">
+  <script src="./clock.js" defer></script>
+</head>
+<body>
+  <main class="stage" aria-label="Flip Clock">
+    <time id="local-time" class="sr-only"></time>
+    <div class="clock" aria-hidden="true">
+      <div class="tile" id="hours"><span class="meridiem"></span></div>
+      <div class="tile" id="minutes"></div>
+      <div class="tile" id="seconds" hidden></div>
+    </div>
+    <noscript>Enable JavaScript to display the clock.</noscript>
+  </main>
+
+  <div class="toolbar" role="group" aria-label="Clock controls">
+    <button class="icon-button" id="open-settings" type="button" aria-label="Settings" title="Settings" aria-haspopup="dialog">
+      <span class="sliders-icon" aria-hidden="true"><i></i><i></i></span>
+    </button>
+    <button class="icon-button" id="fullscreen" type="button" aria-label="Enter fullscreen" title="Fullscreen (F)">
+      <span class="fullscreen-icon" aria-hidden="true"></span>
+    </button>
+  </div>
+  <p class="toast" id="notice" role="status" hidden></p>
+
+  <dialog id="settings" aria-labelledby="settings-title">
+    <header class="settings-header">
+      <h1 id="settings-title">Settings</h1>
+      <form method="dialog"><button class="icon-button close-button" aria-label="Close settings" title="Close settings">×</button></form>
+    </header>
+    <div class="settings-row">
+      <span id="format-label">Time format</span>
+      <div class="segments" role="group" aria-labelledby="format-label">
+        <button type="button" data-format="12" aria-pressed="true">12h</button>
+        <button type="button" data-format="24" aria-pressed="false">24h</button>
+      </div>
+    </div>
+    <label class="settings-row">
+      Show seconds
+      <input type="checkbox" id="show-seconds">
+    </label>
+    <div class="settings-row">
+      <label for="clock-size">Clock size</label>
+      <div class="range-control">
+        <input type="range" id="clock-size" min="50" max="100" step="5" value="100">
+        <output id="clock-size-value" for="clock-size">100%</output>
+      </div>
+    </div>
+    <div class="settings-row">
+      <label for="brightness">Brightness</label>
+      <div class="range-control">
+        <input type="range" id="brightness" min="20" max="100" step="5" value="100">
+        <output id="brightness-value" for="brightness">100%</output>
+      </div>
+    </div>
+    <label class="settings-row">
+      Keep screen awake
+      <input type="checkbox" id="keep-awake" aria-describedby="awake-status">
+    </label>
+    <p class="awake-status" id="awake-status" role="status" hidden></p>
+    <footer class="settings-footer"><kbd>F</kbd> Fullscreen</footer>
+  </dialog>
+
+  <template id="flaps">
+    <span class="flap top"><span class="glyph"></span></span>
+    <span class="flap bottom"><span class="glyph"></span></span>
+    <span class="flap top moving" hidden><span class="glyph"></span></span>
+    <span class="flap bottom moving" hidden><span class="glyph"></span></span>
+  </template>
+</body>
+</html>
